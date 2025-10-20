@@ -1,0 +1,45 @@
+{
+  "name": "abinnovision-datev-lohn-extract",
+  "version": "1.0.0",
+  "description": "Split DATEV PDF salary statements by employee personnel number",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "datev-splitter": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "tsx watch src/cli.ts",
+    "dev:node": "npm run build && node --watch dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "datev",
+    "pdf",
+    "splitter",
+    "salary",
+    "payroll",
+    "personnel",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.1.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.7.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "yarn@4.10.3"
+}
