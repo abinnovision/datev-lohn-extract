@@ -1,0 +1,32 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		// Language and Environment
+		"target": "ESNext",
+		"lib": ["ES2023"],
+		// Modules
+		"module": "Node16",
+		"moduleResolution": "node16",
+		"resolveJsonModule": true,
+		// Emit
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		// Interop Constraints
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		// Type Checking
+		"strict": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": true,
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		// Completeness
+		"skipLibCheck": true
+	}
+}

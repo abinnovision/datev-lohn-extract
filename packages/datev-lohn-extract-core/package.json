@@ -1,0 +1,51 @@
+{
+	"name": "@internal/datev-lohn-extract-core",
+	"version": "0.0.0",
+	"description": "Core library for extracting structured data from DATEV PDF salary statements",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"clean": "rm -rf dist",
+		"lint:check": "eslint '{{src,test}/**/*,*}.{js,ts}'",
+		"lint:fix": "eslint '{{src,test}/**/*,*}.{js,ts}' --fix",
+		"format:check": "prettier --check '{{src,test}/**/*,*}.{js,ts,json,json5,yml,yaml,md}'",
+		"format:fix": "prettier --write '{{src,test}/**/*,*}.{js,ts,json,json5,yml,yaml,md}'",
+		"test-unit": "vitest --run",
+		"test-unit:watch": "vitest --watch"
+	},
+	"dependencies": {
+		"pdf-lib": "^1.17.1",
+		"pdfjs-dist": "^4.7.76",
+		"pino": "^10.1.0"
+	},
+	"devDependencies": {
+		"@abinnovision/eslint-config-base": "^2.2.0",
+		"@abinnovision/eslint-config-typescript": "^2.2.1",
+		"@types/node": "^24.8.1",
+		"eslint": "^9.38.0",
+		"prettier": "^3.6.2",
+		"typescript": "^5.9.3",
+		"vitest": "^3.0.0"
+	},
+	"prettier": "@abinnovision/prettier-config",
+	"lint-staged": {
+		"src/**/*.{js,ts}": [
+			"eslint --fix",
+			"prettier --write"
+		],
+		"*.{js,ts,json,json5,yaml,yml,md}": [
+			"prettier --write"
+		]
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}

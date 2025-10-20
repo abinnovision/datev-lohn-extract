@@ -362,8 +362,12 @@ cypress.env.json
 !.idea/inspectionProfiles
 !.idea/prettier.xml
 
-# Exclude the '.turbo' directory.
+# Monorepo - Turborepo cache
 .turbo/
+
+# Monorepo - Build outputs
+apps/*/dist/
+packages/*/dist/
 
 # Exclude all generated files which are usually in the 'generated' folder.
 generated/

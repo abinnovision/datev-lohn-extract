@@ -1,0 +1,53 @@
+{
+	"name": "@internal/api",
+	"version": "0.0.0",
+	"description": "REST API service for DATEV Lohn extraction",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json",
+		"start": "node dist/index.js",
+		"start:dev": "tsx watch src/index.ts",
+		"clean": "rm -rf dist",
+		"lint:check": "eslint '{{src,test}/**/*,*}.{js,ts}'",
+		"lint:fix": "eslint '{{src,test}/**/*,*}.{js,ts}' --fix",
+		"format:check": "prettier --check '{{src,test}/**/*,*}.{js,ts,json,json5,yml,yaml,md}'",
+		"format:fix": "prettier --write '{{src,test}/**/*,*}.{js,ts,json,json5,yml,yaml,md}'",
+		"test-unit": "vitest --run",
+		"test-unit:watch": "vitest --watch"
+	},
+	"dependencies": {
+		"@hono/node-server": "^1.14.2",
+		"@hono/standard-validator": "^0.1.5",
+		"@internal/datev-lohn-extract-core": "workspace:^",
+		"@standard-community/standard-json": "^0.3.5",
+		"@standard-community/standard-openapi": "^0.2.8",
+		"@t3-oss/env-core": "^0.13.8",
+		"archiver": "^7.0.1",
+		"hono": "^4.7.13",
+		"hono-openapi": "^1.1.0",
+		"quansync": "^0.2.11",
+		"zod": "^4.1.12",
+		"zod-openapi": "^5.4.3"
+	},
+	"devDependencies": {
+		"@types/archiver": "^6.0.2",
+		"@types/node": "^24.8.1",
+		"tsx": "^4.20.6",
+		"typescript": "^5.9.3",
+		"vitest": "^3.0.0"
+	},
+	"prettier": "@abinnovision/prettier-config",
+	"lint-staged": {
+		"src/**/*.{js,ts}": [
+			"eslint --fix",
+			"prettier --write"
+		],
+		"*.{js,ts,json,json5,yaml,yml,md}": [
+			"prettier --write"
+		]
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}
