@@ -31,8 +31,11 @@
 		"zod-openapi": "^5.4.3"
 	},
 	"devDependencies": {
+		"@abinnovision/eslint-config-base": "^2.2.0",
+		"@abinnovision/eslint-config-typescript": "^2.2.1",
 		"@types/archiver": "^6.0.2",
 		"@types/node": "^24.8.1",
+		"globals": "^16.4.0",
 		"tsx": "^4.20.6",
 		"typescript": "^5.9.3",
 		"vitest": "^3.0.0"

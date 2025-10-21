@@ -639,6 +639,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/api@workspace:apps/api"
   dependencies:
+    "@abinnovision/eslint-config-base": "npm:^2.2.0"
+    "@abinnovision/eslint-config-typescript": "npm:^2.2.1"
     "@hono/node-server": "npm:^1.14.2"
     "@hono/standard-validator": "npm:^0.1.5"
     "@internal/datev-lohn-extract-core": "workspace:^"
@@ -648,6 +650,7 @@ __metadata:
     "@types/archiver": "npm:^6.0.2"
     "@types/node": "npm:^24.8.1"
     archiver: "npm:^7.0.1"
+    globals: "npm:^16.4.0"
     hono: "npm:^4.7.13"
     hono-openapi: "npm:^1.1.0"
     quansync: "npm:^0.2.11"
@@ -669,6 +672,7 @@ __metadata:
     "@types/node": "npm:^24.8.1"
     commander: "npm:^12.1.0"
     eslint: "npm:^9.38.0"
+    globals: "npm:^16.4.0"
     prettier: "npm:^3.6.2"
     typescript: "npm:^5.9.3"
     vitest: "npm:^3.0.0"
@@ -685,6 +689,7 @@ __metadata:
     "@abinnovision/eslint-config-typescript": "npm:^2.2.1"
     "@types/node": "npm:^24.8.1"
     eslint: "npm:^9.38.0"
+    globals: "npm:^16.4.0"
     pdf-lib: "npm:^1.17.1"
     pdfjs-dist: "npm:^4.7.76"
     pino: "npm:^10.1.0"
@@ -3262,6 +3267,13 @@ __metadata:
   version: 14.0.0
   resolution: "globals@npm:14.0.0"
   checksum: 10/03939c8af95c6df5014b137cac83aa909090c3a3985caef06ee9a5a669790877af8698ab38007e4c0186873adc14c0b13764acc754b16a754c216cc56aa5f021
+  languageName: node
+  linkType: hard
+
+"globals@npm:^16.4.0":
+  version: 16.4.0
+  resolution: "globals@npm:16.4.0"
+  checksum: 10/1627a9f42fb4c82d7af6a0c8b6cd616e00110908304d5f1ddcdf325998f3aed45a4b29d8a1e47870f328817805263e31e4f1673f00022b9c2b210552767921cf
   languageName: node
   linkType: hard
 
