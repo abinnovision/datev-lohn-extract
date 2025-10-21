@@ -128,7 +128,7 @@ jobs:
     env:
       IMAGE_CACHE: ${{ vars.GCP_AR_DOCKER_URL }}/app-${{ matrix.app }}-cache
       IMAGE_NAME: ${{ vars.GCP_AR_DOCKER_URL }}/app-${{ matrix.app }}
-      IMAGE_NAME_GHCR: ghcr.io/${{ github.repository_owner }}/app-${{ matrix.app }}
+      IMAGE_NAME_GHCR: ghcr.io/${{ github.repository_owner }}/datev-lohn-extract-${{ matrix.app }}
       IS_RELEASE_VERSION: ${{ contains(fromJSON(needs.release.outputs.paths-released), format('apps/{0}', matrix.app)) }}
     permissions:
       contents: "read"
