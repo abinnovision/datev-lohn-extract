@@ -259,7 +259,6 @@ extractRoutes.post(
 			return c.body(zipBuffer, 200, {
 				"Content-Type": "application/zip",
 				"Content-Disposition": 'attachment; filename="datev-extract.zip"',
-				"Content-Length": String(zipBuffer.length),
 			});
 		} catch (error) {
 			// Handle errors with appropriate status codes
