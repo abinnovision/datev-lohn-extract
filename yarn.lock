@@ -650,6 +650,7 @@ __metadata:
     "@types/archiver": "npm:^6.0.2"
     "@types/node": "npm:^24.8.1"
     archiver: "npm:^7.0.1"
+    eslint: "npm:^9.38.0"
     globals: "npm:^16.4.0"
     hono: "npm:^4.7.13"
     hono-openapi: "npm:^1.1.0"
