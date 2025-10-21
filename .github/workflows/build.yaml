@@ -143,6 +143,16 @@ jobs:
         uses: abinnovision/actions@setup-node-v1
       - name: Install dependencies
         run: yarn install --immutable
+      - name: Validate app and prepare build
+        run: |
+          # Validate that the app exists and prepare the build using our script
+          chmod +x tooling/prepare-build-app.sh
+          ./tooling/prepare-build-app.sh ${{ matrix.app }}
+
+          # Load build environment variables
+          if [ -f "out/${{ matrix.app }}/build.env" ]; then
+            cat out/${{ matrix.app }}/build.env >> $GITHUB_ENV
+          fi
       - name: Evaluate version
         run: echo "RELEASE_VERSION=$(cat apps/${{ matrix.app }}/package.json | jq -r ".version")" >> $GITHUB_ENV
       - name: Setup Docker Buildx
@@ -200,3 +210,8 @@ jobs:
           cache-to: type=registry,ref=${{ env.IMAGE_CACHE }}:latest,mode=max
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            app_name=${{ matrix.app }}
+            node_version=${{ env.NODE_VERSION }}
+            build_version=${{ env.BUILD_VERSION }}
+            build_commit=${{ env.BUILD_COMMIT }}

@@ -635,9 +635,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@internal/api@workspace:apps/api":
+"@internal/app-api@workspace:apps/api":
   version: 0.0.0-use.local
-  resolution: "@internal/api@workspace:apps/api"
+  resolution: "@internal/app-api@workspace:apps/api"
   dependencies:
     "@abinnovision/eslint-config-base": "npm:^2.2.0"
     "@abinnovision/eslint-config-typescript": "npm:^2.2.1"

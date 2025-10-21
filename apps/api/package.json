@@ -1,5 +1,5 @@
 {
-	"name": "@internal/api",
+	"name": "@internal/app-api",
 	"version": "0.0.0",
 	"description": "REST API service for DATEV Lohn extraction",
 	"type": "module",
