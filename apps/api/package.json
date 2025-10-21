@@ -33,6 +33,7 @@
 	"devDependencies": {
 		"@abinnovision/eslint-config-base": "^2.2.0",
 		"@abinnovision/eslint-config-typescript": "^2.2.1",
+		"@internal/tsconfig": "workspace:^",
 		"@types/archiver": "^6.0.2",
 		"@types/node": "^24.8.1",
 		"eslint": "^9.38.0",

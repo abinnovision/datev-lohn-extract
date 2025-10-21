@@ -644,6 +644,7 @@ __metadata:
     "@hono/node-server": "npm:^1.14.2"
     "@hono/standard-validator": "npm:^0.1.5"
     "@internal/datev-lohn-extract-core": "workspace:^"
+    "@internal/tsconfig": "workspace:^"
     "@standard-community/standard-json": "npm:^0.3.5"
     "@standard-community/standard-openapi": "npm:^0.2.8"
     "@t3-oss/env-core": "npm:^0.13.8"
@@ -670,6 +671,7 @@ __metadata:
     "@abinnovision/eslint-config-base": "npm:^2.2.0"
     "@abinnovision/eslint-config-typescript": "npm:^2.2.1"
     "@internal/datev-lohn-extract-core": "workspace:^"
+    "@internal/tsconfig": "workspace:^"
     "@types/node": "npm:^24.8.1"
     commander: "npm:^12.1.0"
     eslint: "npm:^9.38.0"
@@ -688,6 +690,7 @@ __metadata:
   dependencies:
     "@abinnovision/eslint-config-base": "npm:^2.2.0"
     "@abinnovision/eslint-config-typescript": "npm:^2.2.1"
+    "@internal/tsconfig": "workspace:^"
     "@types/node": "npm:^24.8.1"
     eslint: "npm:^9.38.0"
     globals: "npm:^16.4.0"
@@ -715,6 +718,14 @@ __metadata:
     sort-package-json: "npm:^3.4.0"
     turbo: "npm:^2.3.3"
     vitest: "npm:^3.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@internal/tsconfig@workspace:^, @internal/tsconfig@workspace:packages/tsconfig":
+  version: 0.0.0-use.local
+  resolution: "@internal/tsconfig@workspace:packages/tsconfig"
+  dependencies:
+    prettier: "npm:^3.6.2"
   languageName: unknown
   linkType: soft
 

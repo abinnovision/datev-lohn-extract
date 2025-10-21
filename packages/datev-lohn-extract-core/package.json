@@ -29,6 +29,7 @@
 	"devDependencies": {
 		"@abinnovision/eslint-config-base": "^2.2.0",
 		"@abinnovision/eslint-config-typescript": "^2.2.1",
+		"@internal/tsconfig": "workspace:^",
 		"@types/node": "^24.8.1",
 		"eslint": "^9.38.0",
 		"globals": "^16.4.0",
