@@ -128,11 +128,12 @@ jobs:
     env:
       IMAGE_CACHE: ${{ vars.GCP_AR_DOCKER_URL }}/app-${{ matrix.app }}-cache
       IMAGE_NAME: ${{ vars.GCP_AR_DOCKER_URL }}/app-${{ matrix.app }}
+      IMAGE_NAME_GHCR: ghcr.io/${{ github.repository_owner }}/app-${{ matrix.app }}
       IS_RELEASE_VERSION: ${{ contains(fromJSON(needs.release.outputs.paths-released), format('apps/{0}', matrix.app)) }}
     permissions:
       contents: "read"
       id-token: "write"
-      packages: "read"
+      packages: "write"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -158,11 +159,19 @@ jobs:
           registry: "europe-west4-docker.pkg.dev"
           username: "oauth2accesstoken"
           password: "${{ steps.auth.outputs.access_token }}"
+      - name: Setup Docker Auth (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: "ghcr.io"
+          username: "${{ github.actor }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
       - name: Extract Metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.IMAGE_NAME }}
+            ${{ env.IMAGE_NAME_GHCR }}
           tags: |
             type=sha,enable=true
             # Version tag is only needed for released versions.
