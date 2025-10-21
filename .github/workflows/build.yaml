@@ -1,0 +1,202 @@
+name: Build
+
+on:
+  pull_request_target:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  merge_group:
+    types:
+      - checks_requested
+
+concurrency:
+  # Group by workflow, branch and PR number.
+  # If the event is a merge group, use the merge group id as the PR number.
+  # If it's not a PR or merge group, use 'main' as the PR number.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.pull_request.number || github.event.merge_group.id || 'main' }}
+  # Cancel only in-progress jobs when it's a PR.
+  cancel-in-progress: ${{ github.event_name == 'pull_request_target' || github.event_name == 'merge_group' }}
+
+jobs:
+  # Configure the commit SHA to use.
+  configure:
+    name: Configure
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    outputs:
+      commit-sha: ${{ steps.commit.outputs.commit_sha }}
+      apps-available: ${{ steps.apps.outputs.apps_available }}
+    steps:
+      # We first need to evaluate the commit SHA to check out.
+      # If the event is a pull request (target), we need to use the head of the PR. The 'pull_request_target' event runs in the
+      # context of the base branch, but we need to check out the head of the PR.
+      # If the event is a push, we can use the SHA of the commit that triggered the event.
+      - name: Evaluate commit
+        id: commit
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+              echo "PR is #${{ github.event.number }}..."
+              echo "PR Head SHA is ${{ github.event.pull_request.head.sha }}..."
+              echo "commit_sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "merge_group" ]]; then
+              echo "Merge group SHA is ${{ github.event.merge_group.head_sha }}..."
+              echo "commit_sha=${{ github.event.merge_group.head_sha }}" >> $GITHUB_OUTPUT
+          else
+              echo "Head SHA is ${{ github.sha }}..."
+              echo "commit_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.commit.outputs.commit_sha }}
+      # Evaluates a list of all available apps by checking directory existence dynamically.
+      - name: Evaluate apps
+        id: apps
+        run: |
+          apps_list="["
+          first=true
+          for app_dir in apps/*/; do
+            if [ -d "$app_dir" ] && [ -f "$app_dir/package.json" ] && [ -f "$app_dir/Dockerfile" ]; then
+              app_name=$(basename "$app_dir")
+              if [ "$first" = true ]; then
+                first=false
+              else
+                apps_list="$apps_list,"
+              fi
+              apps_list="$apps_list\"$app_name\""
+            fi
+          done
+          apps_list="$apps_list]"
+          echo "apps_available=$apps_list" >> $GITHUB_OUTPUT
+
+  # Build and checks are unified into one job. This is because the build
+  # needs to be done before the checks, as the checks will use the built
+  # packages.
+  check_build:
+    name: Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - configure
+    env:
+      # Avoid installing Cypress binary in this job, because it's not being used.
+      CYPRESS_INSTALL_BINARY: "0"
+      NODE_OPTIONS: "--max-old-space-size=4096"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.configure.outputs.commit-sha }}
+      - name: Setup Node.js
+        uses: abinnovision/actions@setup-node-v1
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Check Dependencies
+        run: |
+          yarn dedupe --check || (echo "yarn.lock is not up to date, run 'yarn dedupe'" && exit 1)
+          yarn turbo boundaries || (echo "turbo boundaries failed" && exit 1)
+      - name: Check
+        run: yarn run check
+      - name: Build
+        run: yarn run build
+
+  # Will check if the release is needed and create a release PR if so.
+  release:
+    name: Release
+    needs:
+      - configure
+      - check_build
+    uses: abinnovision/workflows/.github/workflows/release-please.yaml@master
+    secrets: inherit
+    # Only run on push to "main" branch.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+  build-image-matrix:
+    name: Build Image / ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        app: ${{ fromJSON(needs.configure.outputs.apps-available) }}
+    needs:
+      - configure
+      - check_build
+      - release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      IMAGE_CACHE: ${{ vars.GCP_AR_DOCKER_URL }}/app-${{ matrix.app }}-cache
+      IMAGE_NAME: ${{ vars.GCP_AR_DOCKER_URL }}/app-${{ matrix.app }}
+      IMAGE_NAME_GHCR: ghcr.io/${{ github.repository_owner }}/app-${{ matrix.app }}
+      IS_RELEASE_VERSION: ${{ contains(fromJSON(needs.release.outputs.paths-released), format('apps/{0}', matrix.app)) }}
+    permissions:
+      contents: "read"
+      id-token: "write"
+      packages: "write"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.configure.outputs.commit-sha }}
+      - name: Setup Node.js
+        uses: abinnovision/actions@setup-node-v1
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Evaluate version
+        run: echo "RELEASE_VERSION=$(cat apps/${{ matrix.app }}/package.json | jq -r ".version")" >> $GITHUB_ENV
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Setup GCP Authentication
+        id: "auth"
+        uses: abinnovision/actions@setup-gcp-v1
+        with:
+          auth: ${{ vars.GCP_AUTH }}
+          token_format: "access_token"
+      - name: Setup Docker Auth
+        uses: docker/login-action@v2
+        with:
+          registry: "europe-west4-docker.pkg.dev"
+          username: "oauth2accesstoken"
+          password: "${{ steps.auth.outputs.access_token }}"
+      - name: Setup Docker Auth (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: "ghcr.io"
+          username: "${{ github.actor }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.IMAGE_NAME }}
+            ${{ env.IMAGE_NAME_GHCR }}
+          tags: |
+            type=sha,enable=true
+            # Version tag is only needed for released versions.
+            type=semver,pattern={{version}},value=v${{ env.RELEASE_VERSION }},enable=${{ env.IS_RELEASE_VERSION }}
+      - name: Evaluate BUILD_VERSION
+        run: |
+          # If a version has been released, use the version from the release.
+          if [[ "${{ env.IS_RELEASE_VERSION }}" == "true" ]]; then
+            echo "BUILD_VERSION=v$RELEASE_VERSION-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          else
+            # Otherwise, use the current commit hash.
+            echo "BUILD_VERSION=v0.0.0-$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          fi
+
+          # Store the commit hash in the BUILD_COMMIT environment variable.
+          echo "BUILD_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+      - name: Build image
+        uses: docker/build-push-action@v4
+        with:
+          context: "."
+          push: true
+          file: apps/${{ matrix.app }}/Dockerfile
+          cache-from: |
+            type=registry,ref=${{ env.IMAGE_CACHE }}:latest
+            type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=registry,ref=${{ env.IMAGE_CACHE }}:latest,mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
