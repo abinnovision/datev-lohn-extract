@@ -37,20 +37,22 @@ const pdfGenerator = new PdfGenerator();
 const sepaTransfersGenerator = new SepaTransfersGenerator();
 
 /**
- * POST /split
+ * POST /bundle
  * Upload a DATEV PDF and receive a ZIP bundle with:
  * - Individual personnel PDFs
  * - Company-wide PDFs
  * - SEPA transfers CSV
+ * - Metadata JSON with period information
  */
 extractRoutes.post(
-	"/split",
+	"/bundle",
 	describeRoute({
 		tags: ["Extract"],
-		summary: "Extract and split DATEV PDF",
+		summary: "Extract and bundle DATEV PDF",
 		description:
 			"Upload a DATEV salary statement PDF and receive a ZIP bundle containing " +
-			"individual personnel PDFs, company-wide PDFs, and a SEPA transfers CSV file. " +
+			"individual personnel PDFs, company-wide PDFs, a SEPA transfers CSV file, " +
+			"and metadata about the extraction period. " +
 			"\n\nSecurity features:\n" +
 			"- File size validation (max 50MB)\n" +
 			"- File type validation (PDF only)\n" +
@@ -79,15 +81,15 @@ extractRoutes.post(
 		responses: {
 			200: {
 				description:
-					"Successfully processed PDF. Returns ZIP containing personnel PDFs, company PDFs, and SEPA CSV",
+					"Successfully processed PDF. Returns ZIP bundle containing personnel PDFs, company PDFs, SEPA CSV, and metadata",
 				content: {
 					"application/zip": {
 						schema: {
 							type: "string",
 							format: "binary",
 							description:
-								"ZIP archive containing split PDFs and SEPA transfers CSV. " +
-								"Contents: personnel PDFs (XXXXX-YYYY-Month.pdf), company PDFs (COMPANY-YYYY-Month.pdf), and sepa-transfers.csv",
+								"ZIP archive containing split PDFs, SEPA transfers CSV, and metadata. " +
+								"Contents: personnel PDFs (XXXXX-YYYY-Month.pdf), company PDFs (COMPANY-YYYY-Month.pdf), sepa-transfers.csv, and metadata.json",
 						},
 					},
 				},
@@ -126,6 +128,7 @@ extractRoutes.post(
 			},
 		},
 	}),
+	// eslint-disable-next-line complexity
 	async (c) => {
 		try {
 			// Validate Content-Length header first (before parsing body)
@@ -248,6 +251,32 @@ extractRoutes.post(
 
 			// Add SEPA transfers CSV
 			archive.append(result.sepaTransfersCsv, { name: "sepa-transfers.csv" });
+
+			// Generate and add metadata.json
+			// Extract period information from the first personnel PDF (all should have the same period)
+			const periodInfo =
+				result.personnelPdfs.length > 0
+					? result.personnelPdfs[0]?.dateInfo
+					: result.companyPdfs.length > 0
+						? result.companyPdfs[0]?.dateInfo
+						: null;
+
+			const metadata = {
+				period: periodInfo
+					? {
+							year: periodInfo.year || null,
+							month: periodInfo.month || null,
+						}
+					: null,
+				fileCount: {
+					personnel: result.personnelPdfs.length,
+					company: result.companyPdfs.length,
+				},
+			};
+
+			archive.append(JSON.stringify(metadata, null, 2), {
+				name: "metadata.json",
+			});
 
 			// Finalize archive and wait for it to finish
 			await archive.finalize();
