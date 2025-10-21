@@ -89,7 +89,7 @@ extractRoutes.post(
 							format: "binary",
 							description:
 								"ZIP archive containing split PDFs, SEPA transfers CSV, and metadata. " +
-								"Contents: personnel PDFs (XXXXX-YYYY-Month.pdf), company PDFs (COMPANY-YYYY-Month.pdf), sepa-transfers.csv, and metadata.json",
+								"Contents: personnel PDFs (PERSONNEL-YYYY-Month-XXXXX.pdf), company PDFs (COMPANY-YYYY-Month.pdf), sepa-transfers.csv, and metadata.json",
 						},
 					},
 				},
@@ -227,12 +227,13 @@ extractRoutes.post(
 
 			// Add personnel PDFs
 			for (const pdf of result.personnelPdfs) {
-				const filenameParts = [pdf.personnelNumber];
+				const filenameParts = ["PERSONNEL"];
 				if (pdf.dateInfo.year && pdf.dateInfo.month) {
 					filenameParts.push(pdf.dateInfo.year, pdf.dateInfo.month);
 				} else if (pdf.dateInfo.year) {
 					filenameParts.push(pdf.dateInfo.year);
 				}
+				filenameParts.push(pdf.personnelNumber);
 				const filename = sanitizeFilename(filenameParts.join("-") + ".pdf");
 				archive.append(pdf.data, { name: filename });
 			}

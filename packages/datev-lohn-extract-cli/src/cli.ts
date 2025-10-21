@@ -18,12 +18,13 @@ function generateFilename(
 	year: string | null,
 	month: string | null,
 ): string {
-	const parts = [personnelNumber];
+	const parts = ["PERSONNEL"];
 	if (year && month) {
 		parts.push(year, month);
 	} else if (year) {
 		parts.push(year);
 	}
+	parts.push(personnelNumber);
 	return parts.join("-") + ".pdf";
 }
 
