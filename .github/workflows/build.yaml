@@ -24,6 +24,8 @@ jobs:
     uses: abinnovision/actions/.github/workflows/workflow.yaml@node-monorepo-stack-dev
     secrets: inherit
     with:
+      test-types: ""
+
       # Package publishing - disabled for now
       enable-package-publishing: false
 
