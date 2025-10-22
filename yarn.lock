@@ -653,7 +653,7 @@ __metadata:
     archiver: "npm:^7.0.1"
     eslint: "npm:^9.38.0"
     globals: "npm:^16.4.0"
-    hono: "npm:^4.7.13"
+    hono: "npm:^4.10.2"
     hono-openapi: "npm:^1.1.0"
     quansync: "npm:^0.2.11"
     tsx: "npm:^4.20.6"
@@ -3396,10 +3396,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hono@npm:^4.7.13":
-  version: 4.10.1
-  resolution: "hono@npm:4.10.1"
-  checksum: 10/dc2fedcc40da5ec477c70b5fe140985b5ac32303f4084d04d924506107a3174f666f46add006e662c38758a022099f574b0eb07ddce5198d48f23a322558cb83
+"hono@npm:^4.10.2":
+  version: 4.10.2
+  resolution: "hono@npm:4.10.2"
+  checksum: 10/92223307d2340fdb25c657363908b4ee679e28a2b9fae3767201a5b923d8a71f5588ec8f9d041ebd4876f8eb06c0a8f5044990ce290b8e5bc37b25a371de393d
   languageName: node
   linkType: hard
 
