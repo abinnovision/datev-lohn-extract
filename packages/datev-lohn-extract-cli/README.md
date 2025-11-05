@@ -2,28 +2,19 @@
 
 Command-line interface for processing DATEV PDF salary statements.
 
-## Overview
-
-This CLI tool provides a simple command-line interface for splitting DATEV PDF salary statements into individual employee documents and generating SEPA transfer files.
-
 ## Features
 
-- **PDF Splitting**: Automatically splits multi-employee PDFs into individual files
-- **Personnel Detection**: Extracts personnel numbers from each document
-- **SEPA Export**: Generates CSV files with SEPA transfer information
-- **Company Documents**: Handles company-wide documents separately
+- Split multi-employee PDFs into individual files
+- Generate company-wide document PDFs
+- Export SEPA transfer CSV for salary payments
+- Automatic personnel detection and grouping
 
 ## Installation
 
-This is an internal workspace package. To use it:
+Build the CLI from the workspace root:
 
 ```bash
-# Build the CLI
 yarn workspace @internal/datev-lohn-extract-cli build
-
-# Link for local development (from root)
-cd packages/datev-lohn-extract-cli
-yarn link
 ```
 
 ## Usage
@@ -34,7 +25,7 @@ yarn link
 datev-splitter input.pdf -o ./output
 ```
 
-### Command-Line Options
+### Options
 
 ```
 Usage: datev-splitter [options] <infile>
@@ -52,56 +43,51 @@ Options:
 ### Example
 
 ```bash
-# Process a DATEV PDF and output to ./output directory
 datev-splitter salary-statements-2025-10.pdf -o ./output
 
 # Output structure:
 # ./output/
-# ├── 12345-2025-Oktober-LOGN17.pdf    # Employee 12345
-# ├── 67890-2025-Oktober-LOGN17.pdf    # Employee 67890
-# └── sepa-transfers.csv               # SEPA transfer data
+# ├── PERSONNEL-2025-Oktober-12345.pdf    # Employee 12345
+# ├── PERSONNEL-2025-Oktober-67890.pdf    # Employee 67890
+# ├── COMPANY-2025-Oktober.pdf            # Company-wide documents
+# └── sepa-transfers.csv                  # SEPA transfer data
 ```
 
 ## Output Files
 
-### Employee PDFs
+### Personnel PDFs
 
-Individual PDFs are named with the pattern:
+Individual employee PDFs are named:
 
 ```
-{personnelNumber}-{year}-{month}-{formType}.pdf
+PERSONNEL-{year}-{month}-{personnelNumber}.pdf
 ```
 
-Example: `12345-2025-Oktober-LOGN17.pdf`
+Example: `PERSONNEL-2025-Oktober-12345.pdf`
+
+### Company PDFs
+
+Company-wide documents are named:
+
+```
+COMPANY-{year}-{month}.pdf
+```
+
+Example: `COMPANY-2025-Oktober.pdf`
 
 ### SEPA Transfers CSV
 
 The `sepa-transfers.csv` file contains:
 
-- Personnel Number
-- Employee Name
-- IBAN
-- Net Amount (Netto)
-- Month
-- Year
+```csv
+beneficiary_name,iban,amount,currency,reference
+"John Doe","DE89370400440532013000","2100.50","EUR","Gehalt Oktober 2025 (12345)"
+```
 
 ## Dependencies
 
-This CLI depends on:
-
-- **@internal/datev-lohn-extract-core** - Core extraction library
-- **commander** - Command-line argument parsing
-
-## Architecture
-
-The CLI is a thin orchestration layer that:
-
-1. Reads PDF files from disk
-2. Passes data to the core library for processing
-3. Writes output files back to disk
-4. Provides user-friendly console output
-
-All extraction logic is in the core library, making it reusable by other applications (like the REST API).
+- `@internal/datev-lohn-extract-core` - Core extraction library
+- `commander` - Command-line argument parsing
 
 ## Development
 
@@ -113,19 +99,10 @@ yarn build
 yarn lint:check
 yarn lint:fix
 
-# Format
-yarn format:check
-yarn format:fix
-
 # Test
 yarn test-unit
 yarn test-unit:watch
 ```
-
-## Related Packages
-
-- **@internal/datev-lohn-extract-core** - Core extraction library (used by this CLI)
-- **@internal/api** - REST API service (also uses the core library)
 
 ## License
 

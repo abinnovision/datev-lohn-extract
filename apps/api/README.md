@@ -1,113 +1,41 @@
-# @internal/api
+# @internal/app-api
 
-REST API service for DATEV Lohn extraction.
+REST API service for DATEV PDF salary statement extraction.
 
-## Overview
+## Quick Start
 
-This service provides HTTP endpoints for extracting structured data from DATEV PDF salary statements. It wraps the `@internal/datev-lohn-extract` library with a REST interface.
+### Development
 
-## Features
+```bash
+yarn workspace @internal/app-api start:dev
+# Server runs on http://localhost:3000/api/v1
+```
 
-- **File Upload Support**: Accept PDF files via multipart/form-data
-- **Multiple Extraction Modes**: Raw extraction, grouped data, or split PDFs
-- **Health Checks**: Readiness and liveness probes for Kubernetes
-- **Type-Safe**: Full TypeScript with Hono framework
+### Production
+
+```bash
+yarn turbo build --filter=@internal/app-api
+yarn workspace @internal/app-api start
+```
 
 ## API Endpoints
 
-### Health
+### `GET /health`
 
-#### `GET /health`
-
-Basic health check.
-
-**Response:**
+Health check endpoint.
 
 ```json
-{
-  "status": "ok",
-  "timestamp": "2025-10-20T12:00:00.000Z",
-  "service": "datev-lohn-extract-api"
-}
+{ "status": "ok" }
 ```
 
-#### `GET /health/ready`
+### `POST /extract/bundle`
 
-Readiness probe for orchestration platforms.
+Upload a DATEV PDF and receive a ZIP bundle containing:
 
-### Extraction
-
-#### `POST /extract`
-
-Extract raw page data from DATEV PDF.
-
-**Request:**
-
-- Content-Type: `multipart/form-data`
-- Field: `file` (PDF file)
-
-**Response:**
-
-```json
-{
-  "pages": [
-    {
-      "formType": "LOGN17",
-      "personnelNumber": "12345",
-      "employeeName": "John Doe",
-      "brutto": "3500.00",
-      "netto": "2100.50",
-      "iban": "DE89370400440532013000",
-      "year": "2025",
-      "month": "Oktober"
-    }
-  ]
-}
-```
-
-#### `POST /extract/grouped`
-
-Extract and group data by employee.
-
-**Request:**
-
-- Content-Type: `multipart/form-data`
-- Field: `file` (PDF file)
-
-**Response:**
-
-```json
-{
-  "personnelGroups": [
-    {
-      "personnelNumber": "12345",
-      "employeeName": "John Doe",
-      "pages": [...],
-      "formTypes": ["LOGN17"],
-      "dateInfo": {
-        "month": "Oktober",
-        "year": "2025"
-      }
-    }
-  ],
-  "companyGroups": [],
-  "statistics": {
-    "totalPages": 10,
-    "uniquePersonnel": 5,
-    "companyPages": 0,
-    "skippedPages": 0,
-    "formTypeBreakdown": {
-      "LOGN17": 10,
-      "LOMS05": 0,
-      "UNKNOWN": 0
-    }
-  }
-}
-```
-
-#### `POST /extract/split`
-
-Extract, group, and return split PDFs as a ZIP archive.
+- Individual personnel PDFs (`PERSONNEL-YYYY-Month-XXXXX.pdf`)
+- Company-wide PDFs (`COMPANY-YYYY-Month.pdf`)
+- SEPA transfers CSV (`sepa-transfers.csv`)
+- Metadata JSON (`metadata.json`)
 
 **Request:**
 
@@ -117,78 +45,22 @@ Extract, group, and return split PDFs as a ZIP archive.
 **Response:**
 
 - Content-Type: `application/zip`
-- Body: ZIP archive containing split PDFs organized by employee
 
-## Development
+### OpenAPI Documentation
 
-### Start Development Server
+Full API specification: `GET /api/v1/openapi.json`
 
-```bash
-yarn workspace @internal/api start:dev
-```
+## Configuration
 
-The server will start on `http://localhost:3000` with hot-reload enabled.
-
-### Build for Production
+Environment variables (with defaults):
 
 ```bash
-yarn turbo build --filter=@internal/api
+HTTP_PORT=3000                      # Server port
+APP_BASE_URL=http://localhost:3000/api/v1
+APP_MAX_FILE_SIZE=10485760          # 10MB
+APP_PROCESSING_TIMEOUT=15000        # 15s
+APP_MAX_PAGE_COUNT=1000
 ```
-
-### Run in Production
-
-```bash
-yarn workspace @internal/api start
-```
-
-## Environment Variables
-
-- `PORT` - Server port (default: 3000)
-
-## Testing
-
-```bash
-# Run unit tests
-yarn workspace @internal/api test-unit
-
-# Watch mode
-yarn workspace @internal/api test-unit:watch
-```
-
-## Architecture
-
-### Tech Stack
-
-- **Framework**: Hono (ultrafast web framework)
-- **Runtime**: Node.js with @hono/node-server
-- **Language**: TypeScript
-- **Testing**: Vitest
-
-### Project Structure
-
-```
-src/
-├── index.ts           # App entry point
-├── routes/
-│   ├── health.ts      # Health check endpoints
-│   └── extract.ts     # Extraction endpoints (TODO)
-├── middleware/        # Custom middleware (TODO)
-└── lib/               # Utility functions (TODO)
-```
-
-## TODO
-
-- [ ] Implement file upload middleware
-- [ ] Implement `/extract` endpoint
-- [ ] Implement `/extract/grouped` endpoint
-- [ ] Implement `/extract/split` endpoint with ZIP creation
-- [ ] Add request validation
-- [ ] Add error handling middleware
-- [ ] Add request size limits
-- [ ] Add rate limiting
-- [ ] Add API documentation (OpenAPI/Swagger)
-- [ ] Add integration tests
-- [ ] Add Docker support
 
 ## License
 
