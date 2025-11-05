@@ -89,7 +89,7 @@ for (const group of result.personnelGroups) {
   const pdf = await generator.generatePersonnelPdf(group, pdfBuffer);
   await fs.writeFile(
     `PERSONNEL-${group.dateInfo.year}-${group.dateInfo.month}-${group.personnelNumber}.pdf`,
-    pdf.data
+    pdf.data,
   );
 }
 

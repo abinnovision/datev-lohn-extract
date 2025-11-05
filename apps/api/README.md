@@ -31,16 +31,19 @@ Health check endpoint.
 ### `POST /extract/bundle`
 
 Upload a DATEV PDF and receive a ZIP bundle containing:
+
 - Individual personnel PDFs (`PERSONNEL-YYYY-Month-XXXXX.pdf`)
 - Company-wide PDFs (`COMPANY-YYYY-Month.pdf`)
 - SEPA transfers CSV (`sepa-transfers.csv`)
 - Metadata JSON (`metadata.json`)
 
 **Request:**
+
 - Content-Type: `multipart/form-data`
 - Field: `file` (PDF file)
 
 **Response:**
+
 - Content-Type: `application/zip`
 
 ### OpenAPI Documentation
