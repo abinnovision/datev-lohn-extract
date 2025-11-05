@@ -59,7 +59,7 @@ yarn turbo build --filter=@internal/datev-lohn-extract-core
 yarn turbo build --filter=@internal/datev-lohn-extract-cli
 
 # Start only the API in dev mode
-yarn workspace @internal/api start:dev
+yarn workspace @internal/app-api start:dev
 
 # Run tests for a specific package
 yarn workspace @internal/datev-lohn-extract-core test-unit
@@ -74,8 +74,9 @@ yarn workspace @internal/datev-lohn-extract-core test-unit
 │       ├── src/
 │       │   ├── index.ts         # Server entry point
 │       │   ├── routes/          # API endpoints
-│       │   ├── middleware/      # Custom middleware (TODO)
-│       │   └── lib/             # Utilities (TODO)
+│       │   ├── middleware/      # Upload validation & security
+│       │   ├── schemas/         # OpenAPI schemas
+│       │   └── utils/           # Error handling
 │       ├── package.json
 │       ├── tsconfig.json
 │       ├── tsconfig.build.json
@@ -153,7 +154,7 @@ Core library for extracting structured data from DATEV PDF documents. Headless l
 - Form detection (LOGN17, LOMS05, Unknown)
 - Data extraction (personnel, financial, dates)
 - Page grouping by employee
-- Export utilities (PDF splitting, CSV, statistics)
+- Export utilities (PDF generation, SEPA CSV)
 
 **Usage:**
 
@@ -161,10 +162,10 @@ Core library for extracting structured data from DATEV PDF documents. Headless l
 import { PageExtractor, PageGrouper } from "@internal/datev-lohn-extract-core";
 
 const extractor = new PageExtractor();
-const pages = await extractor.extractAllPages("path/to/datev.pdf");
+const pages = await extractor.extractPages(pdfBuffer);
 
 const grouper = new PageGrouper();
-const result = grouper.groupPages(pages);
+const result = grouper.groupByPersonnel(pages);
 ```
 
 See [packages/datev-lohn-extract-core/README.md](packages/datev-lohn-extract-core/README.md) for details.
@@ -189,22 +190,20 @@ datev-splitter input.pdf -o ./output
 
 See [packages/datev-lohn-extract-cli/README.md](packages/datev-lohn-extract-cli/README.md) for details.
 
-### @internal/api (App)
+### @internal/app-api (App)
 
 REST API service for DATEV PDF processing.
 
 **Endpoints:**
 
 - `GET /health` - Health check
-- `POST /extract` - Extract raw data (TODO)
-- `POST /extract/grouped` - Extract and group by employee (TODO)
-- `POST /extract/split` - Split PDFs and return as ZIP (TODO)
+- `POST /extract/bundle` - Extract and return ZIP bundle with PDFs and SEPA CSV
 
 **Start Development:**
 
 ```bash
-yarn workspace @internal/api start:dev
-# Server runs on http://localhost:3000
+yarn workspace @internal/app-api start:dev
+# Server runs on http://localhost:3000/api/v1
 ```
 
 See [apps/api/README.md](apps/api/README.md) for details.
@@ -329,7 +328,7 @@ yarn lint:check
 yarn lint:fix
 
 # Lint specific workspace
-yarn workspace @internal/api lint:check
+yarn workspace @internal/app-api lint:check
 ```
 
 ### Formatting
@@ -448,7 +447,11 @@ Cache these directories for faster CI:
 
 ### apps/api
 
-- `PORT` - Server port (default: 3000)
+- `HTTP_PORT` - Server port (default: 3000)
+- `APP_BASE_URL` - Base URL for API (default: `http://localhost:3000/api/v1`)
+- `APP_MAX_FILE_SIZE` - Maximum upload size in bytes (default: 10485760 / 10MB)
+- `APP_PROCESSING_TIMEOUT` - Processing timeout in ms (default: 15000 / 15s)
+- `APP_MAX_PAGE_COUNT` - Maximum page count (default: 1000)
 
 Add `.env` files to workspace roots (gitignored by default).
 

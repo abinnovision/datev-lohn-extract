@@ -1,21 +1,18 @@
-# @internal/api
+# @internal/app-api
 
-REST API service for DATEV Lohn extraction.
-
-## Overview
-
-This service provides HTTP endpoints for extracting structured data from DATEV PDF salary statements. It wraps the `@internal/datev-lohn-extract` library with a REST interface.
+REST API service for DATEV PDF salary statement extraction.
 
 ## Features
 
-- **File Upload Support**: Accept PDF files via multipart/form-data
-- **Multiple Extraction Modes**: Raw extraction, grouped data, or split PDFs
-- **Health Checks**: Readiness and liveness probes for Kubernetes
-- **Type-Safe**: Full TypeScript with Hono framework
+- PDF upload and extraction via REST API
+- ZIP bundle output with individual PDFs and SEPA CSV
+- File validation and security checks
+- OpenAPI documentation
+- Health check endpoints
 
 ## API Endpoints
 
-### Health
+### Health Check
 
 #### `GET /health`
 
@@ -25,135 +22,71 @@ Basic health check.
 
 ```json
 {
-  "status": "ok",
-  "timestamp": "2025-10-20T12:00:00.000Z",
-  "service": "datev-lohn-extract-api"
+  "status": "ok"
 }
 ```
-
-#### `GET /health/ready`
-
-Readiness probe for orchestration platforms.
 
 ### Extraction
 
-#### `POST /extract`
+#### `POST /extract/bundle`
 
-Extract raw page data from DATEV PDF.
-
-**Request:**
-
-- Content-Type: `multipart/form-data`
-- Field: `file` (PDF file)
-
-**Response:**
-
-```json
-{
-  "pages": [
-    {
-      "formType": "LOGN17",
-      "personnelNumber": "12345",
-      "employeeName": "John Doe",
-      "brutto": "3500.00",
-      "netto": "2100.50",
-      "iban": "DE89370400440532013000",
-      "year": "2025",
-      "month": "Oktober"
-    }
-  ]
-}
-```
-
-#### `POST /extract/grouped`
-
-Extract and group data by employee.
+Upload a DATEV PDF and receive a ZIP bundle containing:
+- Individual personnel PDFs (`PERSONNEL-YYYY-Month-XXXXX.pdf`)
+- Company-wide PDFs (`COMPANY-YYYY-Month.pdf`)
+- SEPA transfers CSV (`sepa-transfers.csv`)
+- Metadata JSON (`metadata.json`)
 
 **Request:**
 
 - Content-Type: `multipart/form-data`
-- Field: `file` (PDF file)
-
-**Response:**
-
-```json
-{
-  "personnelGroups": [
-    {
-      "personnelNumber": "12345",
-      "employeeName": "John Doe",
-      "pages": [...],
-      "formTypes": ["LOGN17"],
-      "dateInfo": {
-        "month": "Oktober",
-        "year": "2025"
-      }
-    }
-  ],
-  "companyGroups": [],
-  "statistics": {
-    "totalPages": 10,
-    "uniquePersonnel": 5,
-    "companyPages": 0,
-    "skippedPages": 0,
-    "formTypeBreakdown": {
-      "LOGN17": 10,
-      "LOMS05": 0,
-      "UNKNOWN": 0
-    }
-  }
-}
-```
-
-#### `POST /extract/split`
-
-Extract, group, and return split PDFs as a ZIP archive.
-
-**Request:**
-
-- Content-Type: `multipart/form-data`
-- Field: `file` (PDF file)
+- Field: `file` (PDF file, max 10MB)
 
 **Response:**
 
 - Content-Type: `application/zip`
-- Body: ZIP archive containing split PDFs organized by employee
+- Body: ZIP archive containing all files
+
+**Security Features:**
+
+- File size validation (max 10MB, configurable)
+- PDF signature validation
+- Page count limits (max 1000 pages, configurable)
+- Processing timeout (15s, configurable)
+- Path traversal prevention
 
 ## Development
 
 ### Start Development Server
 
 ```bash
-yarn workspace @internal/api start:dev
+yarn workspace @internal/app-api start:dev
 ```
 
-The server will start on `http://localhost:3000` with hot-reload enabled.
+The server will start on `http://localhost:3000/api/v1` with hot-reload enabled.
 
 ### Build for Production
 
 ```bash
-yarn turbo build --filter=@internal/api
+yarn turbo build --filter=@internal/app-api
 ```
 
 ### Run in Production
 
 ```bash
-yarn workspace @internal/api start
+yarn workspace @internal/app-api start
 ```
 
 ## Environment Variables
 
-- `PORT` - Server port (default: 3000)
+- `HTTP_PORT` - Server port (default: 3000)
+- `APP_BASE_URL` - Base URL for API (default: `http://localhost:3000/api/v1`)
+- `APP_MAX_FILE_SIZE` - Maximum upload size in bytes (default: 10485760 / 10MB)
+- `APP_PROCESSING_TIMEOUT` - Processing timeout in ms (default: 15000 / 15s)
+- `APP_MAX_PAGE_COUNT` - Maximum page count (default: 1000)
 
-## Testing
+## OpenAPI Documentation
 
-```bash
-# Run unit tests
-yarn workspace @internal/api test-unit
-
-# Watch mode
-yarn workspace @internal/api test-unit:watch
-```
+OpenAPI specification available at: `GET /api/v1/openapi.json`
 
 ## Architecture
 
@@ -162,33 +95,43 @@ yarn workspace @internal/api test-unit:watch
 - **Framework**: Hono (ultrafast web framework)
 - **Runtime**: Node.js with @hono/node-server
 - **Language**: TypeScript
+- **Validation**: Zod with OpenAPI integration
 - **Testing**: Vitest
 
 ### Project Structure
 
 ```
 src/
-├── index.ts           # App entry point
+├── index.ts                      # App entry point
+├── env.ts                        # Environment validation
 ├── routes/
-│   ├── health.ts      # Health check endpoints
-│   └── extract.ts     # Extraction endpoints (TODO)
-├── middleware/        # Custom middleware (TODO)
-└── lib/               # Utility functions (TODO)
+│   ├── health.ts                 # Health check endpoints
+│   └── extract.ts                # Extraction endpoints
+├── middleware/
+│   └── upload-validation.ts      # Upload validation & security
+├── schemas/
+│   └── common.ts                 # OpenAPI schemas
+└── utils/
+    └── errors.ts                 # Error handling
 ```
 
-## TODO
+## Testing
 
-- [ ] Implement file upload middleware
-- [ ] Implement `/extract` endpoint
-- [ ] Implement `/extract/grouped` endpoint
-- [ ] Implement `/extract/split` endpoint with ZIP creation
-- [ ] Add request validation
-- [ ] Add error handling middleware
-- [ ] Add request size limits
-- [ ] Add rate limiting
-- [ ] Add API documentation (OpenAPI/Swagger)
-- [ ] Add integration tests
-- [ ] Add Docker support
+```bash
+# Run unit tests
+yarn workspace @internal/app-api test-unit
+
+# Watch mode
+yarn workspace @internal/app-api test-unit:watch
+```
+
+## Dependencies
+
+- `@internal/datev-lohn-extract-core` - Core extraction library
+- `hono` - Web framework
+- `archiver` - ZIP creation
+- `zod` - Schema validation
+- `hono-openapi` - OpenAPI documentation
 
 ## License
 

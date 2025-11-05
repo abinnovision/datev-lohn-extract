@@ -1,26 +1,18 @@
 # @internal/datev-lohn-extract-core
 
-Core library for extracting structured data from DATEV PDF salary statements. This is a headless library designed for programmatic use.
-
-## Overview
-
-This package provides a headless extraction layer for DATEV PDF documents with support for multiple form types:
-
-- **LOGN17**: Individual employee salary statements
-- **LOMS05**: Social security notifications
-- **Unknown forms**: Fallback handling for unrecognized documents
+Core library for extracting structured data from DATEV PDF salary statements.
 
 ## Features
 
-- **Form Detection**: Automatic identification of DATEV form types
-- **Data Extraction**: Structured extraction of personnel, financial, and date information
-- **Page Grouping**: Intelligent grouping of pages by employee or company-wide
-- **Export Utilities**: PDF splitting, CSV export, and statistics generation
-- **Type Safety**: Full TypeScript support with discriminated union types
+- PDF text extraction and form detection
+- Support for LOGN17 (salary statements) and LOMS05 (social security) forms
+- Personnel-based page grouping
+- PDF generation for individual employees and company documents
+- SEPA transfer CSV generation
 
 ## Installation
 
-This is an internal workspace package. Add it to your workspace:
+Add to your workspace package:
 
 ```json
 {
@@ -32,110 +24,182 @@ This is an internal workspace package. Add it to your workspace:
 
 ## Usage
 
-### Basic Extraction
+### Basic Extraction and Grouping
 
 ```typescript
-import { PageExtractor } from "@internal/datev-lohn-extract-core";
+import { PageExtractor, PageGrouper } from "@internal/datev-lohn-extract-core";
 
+// Extract pages from PDF
 const extractor = new PageExtractor();
-const pages = await extractor.extractAllPages("path/to/datev.pdf");
+const pages = await extractor.extractPages(pdfBuffer);
 
-// Each page has a discriminated union type
-for (const page of pages) {
-  switch (page.formType) {
-    case "LOGN17":
-      console.log(`Employee: ${page.employeeName}, Netto: ${page.netto}`);
-      break;
-    case "LOMS05":
-      console.log(`Social Security: ${page.personnelNumber}`);
-      break;
-    case "UNKNOWN":
-      console.log(`Unknown form: ${page.detectedFormCode}`);
-      break;
-  }
+// Group pages by personnel number
+const grouper = new PageGrouper();
+const result = grouper.groupByPersonnel(pages);
+
+console.log(`Found ${result.personnelGroups.length} employees`);
+```
+
+### Generate Individual PDFs
+
+```typescript
+import { PdfGenerator } from "@internal/datev-lohn-extract-core";
+
+const generator = new PdfGenerator();
+
+// Generate PDF for each employee
+for (const group of result.personnelGroups) {
+  const pdf = await generator.generatePersonnelPdf(group, pdfBuffer);
+  // pdf.data is a Buffer containing the PDF
+  // pdf.personnelNumber, pdf.employeeName, pdf.dateInfo available
+}
+
+// Generate company-wide PDFs
+for (const group of result.companyGroups) {
+  const pdf = await generator.generateCompanyPdf(group, pdfBuffer);
+  // pdf.data is a Buffer containing the PDF
 }
 ```
 
-### Grouping Pages
+### Generate SEPA Transfers CSV
 
 ```typescript
-import { PageGrouper } from "@internal/datev-lohn-extract-core";
+import { SepaTransfersGenerator } from "@internal/datev-lohn-extract-core";
 
-const grouper = new PageGrouper();
-const result = grouper.groupPages(pages);
+const sepaGenerator = new SepaTransfersGenerator();
+const csv = sepaGenerator.generateSepaTransfersCsv(result.personnelGroups);
 
-console.log(`Found ${result.personnelGroups.length} employees`);
-console.log(`Statistics:`, result.statistics);
+// csv is a string with format:
+// beneficiary_name,iban,amount,currency,reference
 ```
 
-### Exporting Results
+## API
+
+### PageExtractor
+
+Extracts text and detects form types from PDF pages.
 
 ```typescript
-import {
-  PDFWriter,
-  CSVExporter,
-  StatsExporter,
-} from "@internal/datev-lohn-extract-core";
-
-// Split PDFs by employee
-const writer = new PDFWriter("source.pdf");
-await writer.writePersonnelGroups(result.personnelGroups, {
-  outputDir: "./output",
-  prefix: "salary",
-  includeFormTypeInFilename: true,
-});
-
-// Export SEPA transfer data
-const csvExporter = new CSVExporter();
-await csvExporter.exportTransfers(
-  result.personnelGroups,
-  "./output/transfers.csv",
-);
-
-// Export statistics
-const statsExporter = new StatsExporter();
-await statsExporter.exportStats(result, "./output/stats.json");
+class PageExtractor {
+  constructor(options?: { logger?: Logger });
+  extractPages(pdfBuffer: Buffer): Promise<ExtractedPage[]>;
+}
 ```
 
-## API Reference
+### PageGrouper
 
-### Core Classes
+Groups extracted pages by personnel number or as company-wide documents.
 
-- **`PageExtractor`**: Extract structured data from PDF pages
-- **`FormDetector`**: Detect form types from text content
-- **`PageGrouper`**: Group pages by employee or company-wide
+```typescript
+class PageGrouper {
+  groupByPersonnel(pages: ExtractedPage[]): PageGrouperResult;
+}
 
-### Form Classes
+interface PageGrouperResult {
+  personnelGroups: PersonnelGroup[];
+  companyGroups: CompanyGroup[];
+}
+```
 
-- **`AbstractForm`**: Base class for all form types
-- **`LOGN17Form`**: Handler for salary statements
-- **`LOMS05Form`**: Handler for social security notifications
-- **`UnknownForm`**: Fallback for unrecognized forms
+### PdfGenerator
 
-### Output Classes
+Generates PDF buffers from grouped pages.
 
-- **`PDFWriter`**: Split PDFs by employee or form type
-- **`CSVExporter`**: Export SEPA transfer data to CSV
-- **`StatsExporter`**: Generate extraction statistics
+```typescript
+class PdfGenerator {
+  generatePersonnelPdf(
+    group: PersonnelGroup,
+    sourcePdfBuffer: Buffer
+  ): Promise<GeneratedPersonnelPdf>;
 
-### Type Exports
+  generateCompanyPdf(
+    group: CompanyGroup,
+    sourcePdfBuffer: Buffer
+  ): Promise<GeneratedCompanyPdf>;
+}
+```
 
-See `types.ts` for full type definitions:
+### SepaTransfersGenerator
 
-- `ExtractedPage` - Discriminated union of all page types
-- `GroupingResult` - Result of grouping operation
-- `PersonnelGroup` - Group of pages for one employee
-- `CompanyGroup` - Company-wide pages
+Generates SEPA transfer CSV data for salary payments.
 
-## Architecture
+```typescript
+class SepaTransfersGenerator {
+  generateSepaTransfersCsv(groups: PersonnelGroup[]): string;
+}
+```
 
-This package follows a layered architecture:
+## Types
 
-1. **Core Layer**: Headless extraction (no side effects)
-2. **Grouping Layer**: Business logic for organizing pages
-3. **Output Layer**: File writing and export utilities
+```typescript
+// Form types
+type FormType = "LOGN17" | "LOMS05" | "UNKNOWN";
 
-All extraction logic is pure and side-effect free. File I/O is isolated to the output layer.
+// Page types (discriminated union)
+type ExtractedPage = LOGN17Page | LOMS05Page | UnknownPage;
+
+interface LOGN17Page {
+  formType: "LOGN17";
+  pageIndex: number;
+  personnelNumber: string | null;
+  employeeName: string | null;
+  year: string | null;
+  month: string | null;
+  brutto: string | null;
+  netto: string | null;
+  iban: string | null;
+  isFirstPage: boolean;
+  isCompanyWide: false;
+}
+
+// Grouping types
+interface PersonnelGroup {
+  personnelNumber: string;
+  employeeName: string;
+  pages: ExtractedPage[];
+  dateInfo: DateInfo;
+}
+
+interface CompanyGroup {
+  pages: ExtractedPage[];
+  dateInfo: DateInfo | null;
+}
+
+// Generated PDF types
+interface GeneratedPersonnelPdf {
+  data: Buffer;
+  pageCount: number;
+  personnelNumber: string;
+  employeeName: string;
+  dateInfo: DateInfo;
+}
+
+interface GeneratedCompanyPdf {
+  data: Buffer;
+  pageCount: number;
+  dateInfo: DateInfo | null;
+}
+```
+
+## Error Handling
+
+The library exports custom error classes:
+
+- `ValidationError` - Invalid input parameters
+- `ExtractionError` - PDF loading or extraction failure
+- `FormDetectionError` - Form type detection failure
+- `PdfGenerationError` - PDF generation failure
+
+## Type Guards
+
+```typescript
+import { isLOGN17Page, isLOMS05Page, isUnknownPage } from "@internal/datev-lohn-extract-core";
+
+if (isLOGN17Page(page)) {
+  // TypeScript knows page is LOGN17Page
+  console.log(page.netto);
+}
+```
 
 ## License
 
