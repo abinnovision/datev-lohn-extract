@@ -585,12 +585,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hono/node-server@npm:^1.14.2":
-  version: 1.19.5
-  resolution: "@hono/node-server@npm:1.19.5"
+"@hono/node-server@npm:^1.19.10":
+  version: 1.19.10
+  resolution: "@hono/node-server@npm:1.19.10"
   peerDependencies:
     hono: ^4
-  checksum: 10/fb1945f683742739acca673e0827c386c642c4edefb1bdbfb5ee0f464191cbcc845eda2544c5e34722c5281281c7164c4d953b7f3604ab0d98ede22d9c62d189
+  checksum: 10/3f4a386bf51d2eb0224522e7485052f8ca6485e9f59fb46cef8fe9578c0d2f35ae26900ed69b6c368250e79944239c70934912f85b833045b14ef19be557aa13
   languageName: node
   linkType: hard
 
@@ -641,7 +641,7 @@ __metadata:
   dependencies:
     "@abinnovision/eslint-config-base": "npm:^2.2.0"
     "@abinnovision/eslint-config-typescript": "npm:^2.2.1"
-    "@hono/node-server": "npm:^1.14.2"
+    "@hono/node-server": "npm:^1.19.10"
     "@hono/standard-validator": "npm:^0.1.5"
     "@internal/datev-lohn-extract-core": "workspace:^"
     "@internal/tsconfig": "workspace:^"
