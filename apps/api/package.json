@@ -17,7 +17,7 @@
 		"test-unit:watch": "vitest --watch"
 	},
 	"dependencies": {
-		"@hono/node-server": "^1.19.10",
+		"@hono/node-server": "^1.19.13",
 		"@hono/standard-validator": "^0.1.5",
 		"@internal/datev-lohn-extract-core": "workspace:^",
 		"@standard-community/standard-json": "^0.3.5",
