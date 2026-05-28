@@ -43,7 +43,7 @@
 		"lint-staged": "^16.2.3",
 		"prettier": "^3.6.2",
 		"sort-package-json": "^3.4.0",
-		"turbo": "^2.3.3",
+		"turbo": "^2.9.14",
 		"vitest": "^3.0.0"
 	},
 	"packageManager": "yarn@4.10.3",
